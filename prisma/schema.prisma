@@ -1,0 +1,80 @@
+cat > prisma/schema.prisma << 'EOL'
+datasource db {
+  provider = "postgresql"
+  url      = env.DATABASE_URL
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String       @unique
+  password      String
+  role          Role        @default(USER)
+  organization  Organization? @relation(fields: [orgId], references: [id])
+  orgId         String?
+  passes        Pass[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Organization {
+  id            String    @id @default(cuid())
+  name          String
+  users         User[]
+  passes        Pass[]
+  passTemplates PassTemplate[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Pass {
+  id            String    @id @default(cuid())
+  type          PassType
+  status        PassStatus @default(ACTIVE)
+  template      PassTemplate @relation(fields: [templateId], references: [id])
+  templateId    String
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  organization  Organization @relation(fields: [orgId], references: [id])
+  orgId         String
+  data          Json
+  validFrom     DateTime
+  validUntil    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model PassTemplate {
+  id            String    @id @default(cuid())
+  name          String
+  type          PassType
+  design        Json
+  organization  Organization @relation(fields: [orgId], references: [id])
+  orgId         String
+  passes        Pass[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum PassType {
+  CORPORATE_ACCESS
+  EVENT
+  LOYALTY
+}
+
+enum PassStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+}
+EOL

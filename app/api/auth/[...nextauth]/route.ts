@@ -5,8 +5,6 @@ import { prisma } from "@/lib/prisma"
 import { compare } from "bcrypt"
 
 const handler = NextAuth({
-  // Only use PrismaAdapter when not using credentials provider
-  // adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -15,18 +13,18 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            throw new Error('Missing credentials');
-          }
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Missing credentials');
+        }
 
+        try {
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email
             }
           });
 
-          if (!user) {
+          if (!user || !user.password) {
             throw new Error('User not found');
           }
 
@@ -40,21 +38,50 @@ const handler = NextAuth({
             id: user.id,
             email: user.email,
             name: user.name,
+            role: user.role,
           }
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error('Authentication error:', error);
           return null;
         }
       }
     })
   ],
-  session: {
-    strategy: "jwt"
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.role = token.role;
+        session.user.id = token.id;
+      }
+      return session;
+    }
   },
   pages: {
     signIn: "/login",
+    error: '/auth/error',
+  },
+  session: {
+    strategy: "jwt"
   },
   debug: process.env.NODE_ENV === 'development',
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  },
 })
 
 export { handler as GET, handler as POST }

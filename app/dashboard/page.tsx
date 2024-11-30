@@ -1,7 +1,9 @@
-import React from 'react';
+import { redirect } from 'next/navigation'
 
-const DashboardPage = () => {
-  return <div>Dashboard</div>;
-};
-
-export default DashboardPage;
+export default function Home() {
+  // Redirect to dashboard for now
+  redirect('/dashboard')
+  
+  // Later we can build a landing page here instead of redirecting
+  return null
+}

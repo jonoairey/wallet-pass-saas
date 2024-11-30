@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma"
 import { compare } from "bcrypt"
 
 const handler = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  // Only use PrismaAdapter when not using credentials provider
+  // adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -14,30 +15,35 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error('Missing credentials');
           }
-        })
 
-        if (!user) {
-          return null
-        }
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email
+            }
+          });
 
-        const isValidPassword = await compare(credentials.password, user.password)
+          if (!user) {
+            throw new Error('User not found');
+          }
 
-        if (!isValidPassword) {
-          return null
-        }
+          const isValidPassword = await compare(credentials.password, user.password);
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
+          if (!isValidPassword) {
+            throw new Error('Invalid password');
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          }
+        } catch (error) {
+          console.error('Auth error:', error);
+          return null;
         }
       }
     })
@@ -48,6 +54,7 @@ const handler = NextAuth({
   pages: {
     signIn: "/login",
   },
+  debug: process.env.NODE_ENV === 'development',
 })
 
 export { handler as GET, handler as POST }

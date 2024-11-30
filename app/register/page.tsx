@@ -6,32 +6,44 @@ import { useRouter } from 'next/navigation';
 export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    setLoading(true);
+    setError(null);
 
     try {
+      const formData = new FormData(e.currentTarget);
+      const data = {
+        email: formData.get('email'),
+        password: formData.get('password'),
+        name: formData.get('name'),
+      };
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: formData.get('email'),
-          password: formData.get('password'),
-          name: formData.get('name'),
-        }),
+        body: JSON.stringify(data),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Registration failed');
+        throw new Error(result.error || 'Registration failed');
       }
 
-      router.push('/login');
+      if (result.success) {
+        router.push('/login');
+      } else {
+        throw new Error(result.error || 'Registration failed');
+      }
     } catch (error: any) {
-      setError(error.message);
+      setError(error.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,9 +98,12 @@ export default function RegisterPage() {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={loading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                loading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
             >
-              Register
+              {loading ? 'Registering...' : 'Register'}
             </button>
           </div>
         </form>

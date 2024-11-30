@@ -1,17 +1,13 @@
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import NextAuth, { DefaultSession } from "next-auth"
+import NextAuth, { DefaultSession, User as NextAuthUser } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import { compare } from "bcrypt"
-import { Role } from "@prisma/client"
+import { Role, User } from "@prisma/client"
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      role?: Role
-      id: string
-    } & DefaultSession["user"]
-  }
+interface CustomUser extends NextAuthUser {
+  role?: Role;
+  id: string;
 }
 
 const handler = NextAuth({
@@ -22,7 +18,7 @@ const handler = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials): Promise<CustomUser | null> {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Missing credentials');
         }
@@ -49,7 +45,7 @@ const handler = NextAuth({
             email: user.email,
             name: user.name,
             role: user.role,
-          }
+          } as CustomUser;
         } catch (error) {
           console.error('Authentication error:', error);
           return null;
@@ -60,7 +56,7 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.role = (user as CustomUser).role;
         token.id = user.id;
       }
       return token;

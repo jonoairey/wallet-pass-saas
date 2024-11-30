@@ -1,7 +1,6 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import prisma from "@/lib/prisma"
-import { compare } from "bcrypt"
 
 const handler = NextAuth({
   providers: [
@@ -26,7 +25,8 @@ const handler = NextAuth({
           throw new Error('User not found');
         }
 
-        const isValidPassword = await compare(credentials.password, user.password);
+        // Temporary: Direct password comparison since we're not using hashing
+        const isValidPassword = credentials.password === user.password;
 
         if (!isValidPassword) {
           throw new Error('Invalid password');

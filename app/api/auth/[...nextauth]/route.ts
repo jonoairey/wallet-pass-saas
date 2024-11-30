@@ -1,9 +1,18 @@
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import NextAuth from "next-auth"
+import NextAuth, { DefaultSession } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import { compare } from "bcrypt"
 import { Role } from "@prisma/client"
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      role?: Role
+      id: string
+    } & DefaultSession["user"]
+  }
+}
 
 const handler = NextAuth({
   providers: [
@@ -39,7 +48,7 @@ const handler = NextAuth({
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role as Role,
+            role: user.role,
           }
         } catch (error) {
           console.error('Authentication error:', error);
@@ -70,17 +79,6 @@ const handler = NextAuth({
   },
   session: {
     strategy: "jwt"
-  },
-  cookies: {
-    sessionToken: {
-      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production'
-      }
-    }
   },
   debug: process.env.NODE_ENV === 'development',
 })

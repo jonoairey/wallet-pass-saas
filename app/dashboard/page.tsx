@@ -1,9 +1,17 @@
+import { getServerSession } from "next-auth/next"
 import { redirect } from 'next/navigation'
+import DashboardOverview from "@/components/dashboard/DashboardOverview"
 
-export default function Home() {
-  // Redirect to dashboard for now
-  redirect('/dashboard')
+export default async function DashboardPage() {
+  const session = await getServerSession()
   
-  // Later we can build a landing page here instead of redirecting
-  return null
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  return (
+    <div className="p-6">
+      <DashboardOverview />
+    </div>
+  )
 }

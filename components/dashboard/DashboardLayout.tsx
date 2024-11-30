@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import type { FC, ReactNode } from 'react';
 import { 
   CreditCard, 
   Users, 
@@ -13,15 +16,19 @@ import {
   Wallet,
   Building,
   UserPlus,
-  Layout
+  Layout as LayoutIcon
 } from 'lucide-react';
 
-const DashboardLayout = ({ children }) => {
+interface Props {
+  children: ReactNode;
+}
+
+const DashboardLayout: FC<Props> = ({ children }) => {
   const navigation = [
     {
       name: 'Overview',
       href: '/dashboard',
-      icon: Layout,
+      icon: LayoutIcon,
     },
     {
       name: 'Pass Management',
@@ -72,8 +79,7 @@ const DashboardLayout = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation */}
+    <div className="relative min-h-screen bg-gray-50">
       <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50">
         <div className="flex items-center justify-between h-full px-4">
           <div className="flex items-center space-x-4">
@@ -88,13 +94,12 @@ const DashboardLayout = ({ children }) => {
         </div>
       </div>
 
-      {/* Sidebar */}
       <div className="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 pt-16">
         <div className="flex flex-col h-full">
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => (
               <div key={item.name} className="space-y-1">
-                <a
+                <a 
                   href={item.href}
                   className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900"
                 >
@@ -104,7 +109,7 @@ const DashboardLayout = ({ children }) => {
                 {item.subItems && (
                   <div className="pl-4 space-y-1">
                     {item.subItems.map((subItem) => (
-                      <a
+                      <a 
                         key={subItem.name}
                         href={subItem.href}
                         className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 rounded-md hover:bg-gray-50 hover:text-gray-900"
@@ -128,7 +133,6 @@ const DashboardLayout = ({ children }) => {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="pl-64 pt-16">
         <main className="p-8">
           {children}

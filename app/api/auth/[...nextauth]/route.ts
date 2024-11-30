@@ -3,6 +3,7 @@ import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import { compare } from "bcrypt"
+import { Role } from "@prisma/client"
 
 const handler = NextAuth({
   providers: [
@@ -38,7 +39,7 @@ const handler = NextAuth({
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role,
+            role: user.role as Role,
           }
         } catch (error) {
           console.error('Authentication error:', error);
@@ -70,7 +71,6 @@ const handler = NextAuth({
   session: {
     strategy: "jwt"
   },
-  debug: process.env.NODE_ENV === 'development',
   cookies: {
     sessionToken: {
       name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
@@ -82,6 +82,7 @@ const handler = NextAuth({
       }
     }
   },
+  debug: process.env.NODE_ENV === 'development',
 })
 
 export { handler as GET, handler as POST }

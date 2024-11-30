@@ -11,45 +11,60 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Missing credentials');
-        }
-
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.log('Missing credentials');
+            return null;
           }
-        });
 
-        if (!user || !user.password) {
-          throw new Error('User not found');
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email
+            }
+          });
+
+          console.log('Found user:', user); // Debug log
+
+          if (!user) {
+            console.log('No user found');
+            return null;
+          }
+
+          // Direct password comparison
+          const isValidPassword = credentials.password === user.password;
+          console.log('Password comparison:', {
+            provided: credentials.password,
+            stored: user.password,
+            matches: isValidPassword
+          });
+
+          if (!isValidPassword) {
+            console.log('Invalid password');
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
+          return null;
         }
-
-        // Temporary: Direct password comparison since we're not using hashing
-        const isValidPassword = credentials.password === user.password;
-
-        if (!isValidPassword) {
-          throw new Error('Invalid password');
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
       }
     })
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
         token.id = user.id;
       }
       return token;
     },
-    session({ session, token }) {
+    async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role;
         session.user.id = token.id;
@@ -60,10 +75,7 @@ const handler = NextAuth({
   pages: {
     signIn: "/login",
   },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
+  debug: true // Enable debug messages
 })
 
 export { handler as GET, handler as POST }

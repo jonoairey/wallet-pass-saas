@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import PassPreview from '@/components/dashboard/PassPreview';
 
+
 interface FormData {
   name: string;
   description: string;
@@ -119,7 +120,7 @@ export default function NewTemplatePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Submit logic here
+    // Implement your submission logic here
     console.log('Form data:', formData);
   };
 

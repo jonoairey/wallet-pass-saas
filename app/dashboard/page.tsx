@@ -24,11 +24,16 @@ export default function DashboardPage() {
   const fetchTemplates = async () => {
     try {
       const response = await fetch('/api/templates');
-      if (!response.ok) throw new Error('Failed to fetch templates');
+      if (!response.ok) {
+        throw new Error('Failed to fetch templates');
+      }
       const data = await response.json();
-      setTemplates(data);
+      setTemplates(data || []);
+      setError(null);
     } catch (err) {
-      setError('Failed to load templates');
+      console.error('Error fetching templates:', err);
+      setError('Failed to load dashboard data');
+      setTemplates([]);
     } finally {
       setLoading(false);
     }
@@ -46,9 +51,19 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-red-600">{error}</p>
+        <button 
+          onClick={fetchTemplates}
+          className="mt-4 text-indigo-600 hover:text-indigo-800"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
-  return <DashboardOverview templates={templates} />;
+  return (
+    <div className="p-6">
+      <DashboardOverview templates={templates} />
+    </div>
+  );
 }

@@ -11,14 +11,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ errors: validationErrors }, { status: 400 });
     }
 
-    // Note: Template should match the exact model name in your schema
-    const newTemplate = await prisma.Template.create({
+    // Changed from Template to template
+    const newTemplate = await prisma.template.create({
       data: {
         name: data.name,
         description: data.description,
         type: data.passType,
         configuration: data,
-        organizationId: data.organizationId || 'default-org-id',
+        organizationId: data.organizationId || 'default-org-id', // You'll need to get this from the session
         status: 'DRAFT',
       },
     });

@@ -28,7 +28,7 @@ model Organization {
   updatedAt     DateTime  @updatedAt
 }
 
-   model template {
+   model Template {
      id            String    @id @default(cuid())
      name          String
      description   String

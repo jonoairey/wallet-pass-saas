@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
+import { hash } from 'bcrypt';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,12 +32,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, we'll store the password directly
-    // In production, you should use a proper hashing solution
+    const hashedPassword = await hash(password, 10);
+
     const user = await prisma.user.create({
       data: {
         email,
-        password, // WARNING: This is temporary
+        password: hashedPassword,
         name,
         role: 'USER',
       },

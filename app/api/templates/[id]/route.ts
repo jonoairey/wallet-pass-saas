@@ -8,7 +8,7 @@ export async function GET(
   try {
     const template = await prisma.template.findUnique({
       where: {
-        id: Number(params.id)
+        id: params.id  // Remove the Number() conversion
       }
     });
 
@@ -37,11 +37,14 @@ export async function PUT(
     
     const updatedTemplate = await prisma.template.update({
       where: {
-        id: Number(params.id)
+        id: params.id  // Remove the Number() conversion
       },
       data: {
         name: data.name,
+        description: data.description,
         type: data.passType,
+        configuration: data,
+        status: data.status || 'DRAFT',
       }
     });
 

@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const template = await prisma.Template.findUnique({
+    const template = await prisma.passTemplate.findUnique({
       where: {
         id: params.id
       }
@@ -35,16 +35,13 @@ export async function PUT(
   try {
     const data = await request.json();
     
-    const updatedTemplate = await prisma.Template.update({
+    const updatedTemplate = await prisma.passTemplate.update({
       where: {
         id: params.id
       },
       data: {
         name: data.name,
-        description: data.description,
         type: data.passType,
-        configuration: data,
-        status: data.status || 'DRAFT',
       }
     });
 

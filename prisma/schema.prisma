@@ -28,18 +28,18 @@ model Organization {
   updatedAt     DateTime  @updatedAt
 }
 
-model Template {
-  id            String    @id @default(cuid())
-  name          String
-  description   String
-  type          String    // Pass type stored as string
-  status        TemplateStatus @default(DRAFT)
-  configuration Json      // Store complete pass configuration
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  organization  Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
-}
+   model Template {
+     id            String    @id @default(cuid())
+     name          String
+     description   String
+     type          String
+     status        TemplateStatus @default(DRAFT)
+     configuration Json
+     createdAt     DateTime  @default(now())
+     updatedAt     DateTime  @updatedAt
+     organization  Organization @relation(fields: [organizationId], references: [id])
+     organizationId String
+   }
 
 enum Role {
   USER

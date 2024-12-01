@@ -5,12 +5,21 @@ import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';
+  configuration: any;
+}
+
 export default function TemplatesPage() {
   const router = useRouter();
-  const [templates, setTemplates] = useState([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null); // Changed from null to string | null
 
   useEffect(() => {
     fetchTemplates();
@@ -22,8 +31,10 @@ export default function TemplatesPage() {
       if (!response.ok) throw new Error('Failed to fetch templates');
       const data = await response.json();
       setTemplates(data);
+      setError(null); // Reset error state on success
     } catch (err) {
       setError('Failed to load templates');
+      setTemplates([]); // Reset templates on error
     } finally {
       setLoading(false);
     }
@@ -37,11 +48,9 @@ export default function TemplatesPage() {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete template');
-      
-      // Refresh templates list
-      fetchTemplates();
+      await fetchTemplates(); // Refresh the list after deletion
     } catch (err) {
-      console.error('Delete error:', err);
+      setError('Failed to delete template');
     }
   };
 
@@ -74,6 +83,17 @@ export default function TemplatesPage() {
           New Template
         </Link>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="rounded-md bg-red-50 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">{error}</h3>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="flex gap-4">

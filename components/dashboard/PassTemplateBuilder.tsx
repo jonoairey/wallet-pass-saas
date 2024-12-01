@@ -1,9 +1,30 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { validatePassTemplate } from '@/utils/passValidation';
 import { PassTemplate, PassType, BarcodeFormat, NFCSettings } from '@/types/pass';
-import { Eye, Save, AlertCircle, Plus, Trash } from 'lucide-react';
+import { 
+  Eye, 
+  Save, 
+  AlertCircle, 
+  Plus, 
+  Trash,
+  Settings,
+  Image,
+  Type,
+  Palette,
+  Barcode,
+  MapPin,
+  Bell,
+  Smartphone 
+} from 'lucide-react';
+
+interface PassTemplateBuilderProps {
+  initialTemplate?: any;
+  mode?: 'create' | 'edit';
+  templateId?: string;
+}
 
 const initialNFCSettings: NFCSettings = {
   enabled: false,
@@ -16,7 +37,7 @@ const initialNFCSettings: NFCSettings = {
   }
 };
 
-const initialTemplate: PassTemplate = {
+const defaultTemplate = {
   passTypeIdentifier: '',
   teamIdentifier: '',
   organizationName: '',
@@ -27,7 +48,7 @@ const initialTemplate: PassTemplate = {
   foregroundColor: 'rgb(0, 0, 0)',
   labelColor: 'rgb(0, 0, 0)',
   barcodes: [{
-    format: 'PKBarcodeFormatQR',
+    format: 'PKBarcodeFormatQR' as BarcodeFormat,
     message: '',
     messageEncoding: 'iso-8859-1'
   }],
@@ -40,60 +61,31 @@ const initialTemplate: PassTemplate = {
   },
   nfc: initialNFCSettings
 };
-
-export default function PassTemplateBuilder() {
-  const [template, setTemplate] = useState<PassTemplate>(initialTemplate);
+const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({ 
+  initialTemplate, 
+  mode = 'create', 
+  templateId 
+}) => {
+  const router = useRouter();
+  const [template, setTemplate] = useState(initialTemplate || defaultTemplate);
   const [activeTab, setActiveTab] = useState('basic');
+  const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(true);
+  const [previewMode, setPreviewMode] = useState<'front' | 'back'>('front');
 
   const tabs = [
-    { id: 'basic', label: 'Basic Info' },
-    { id: 'appearance', label: 'Appearance' },
-    { id: 'structure', label: 'Fields' },
-    { id: 'barcode', label: 'Barcode' },
-    { id: 'location', label: 'Location' },
-    { id: 'nfc', label: 'NFC' },
-    { id: 'advanced', label: 'Advanced' }
+    { id: 'basic', label: 'Basic Info', icon: Type },
+    { id: 'design', label: 'Design', icon: Palette },
+    { id: 'fields', label: 'Fields', icon: Settings },
+    { id: 'images', label: 'Images', icon: Image },
+    { id: 'barcode', label: 'Barcode', icon: Barcode },
+    { id: 'nfc', label: 'NFC', icon: Smartphone },
+    { id: 'location', label: 'Location', icon: MapPin },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'advanced', label: 'Advanced', icon: Settings }
   ];
 
-  const handleSave = () => {
-    const validationErrors = validatePassTemplate(template);
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    console.log('Valid template:', template);
-    // Add your save logic here
-  };
-
-  const addField = (category: keyof PassTemplate['structure']) => {
-    setTemplate({
-      ...template,
-      structure: {
-        ...template.structure,
-        [category]: [
-          ...template.structure[category],
-          { key: '', label: '', value: '' }
-        ]
-      }
-    });
-  };
-
-// Add these props to your component
-interface PassTemplateBuilderProps {
-  initialTemplate?: any;
-  mode?: 'create' | 'edit';
-  templateId?: string;
-}
-
-export default function PassTemplateBuilder({
-  initialTemplate,
-  mode = 'create',
-  templateId
-}: PassTemplateBuilderProps) {
-  const [template, setTemplate] = useState(initialTemplate || defaultTemplate);
-  
-  // Update the handleSave function
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -130,7 +122,6 @@ export default function PassTemplateBuilder({
     }
   };
 
-  // Add a discard changes confirmation
   const handleCancel = () => {
     if (mode === 'edit' && !confirm('Discard changes?')) {
       return;
@@ -138,50 +129,28 @@ export default function PassTemplateBuilder({
     router.push('/dashboard/passes/templates');
   };
 
-  // Update the JSX to show edit mode
-  return (
-    <div className="flex h-full">
-      {/* ... existing JSX ... */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
-        <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
-          <button
-            onClick={() => setShowPreview(!showPreview)}
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            {showPreview ? 'Hide Preview' : 'Show Preview'}
-          </button>
-          <div className="flex space-x-4">
-            <button
-              onClick={handleCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
-                saving 
-                  ? 'bg-indigo-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700'
-              }`}
-            >
-              {saving ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Create Template'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+  const addField = (category: keyof PassTemplate['structure']) => {
+    setTemplate({
+      ...template,
+      structure: {
+        ...template.structure,
+        [category]: [
+          ...template.structure[category],
+          { key: '', label: '', value: '' }
+        ]
+      }
+    });
+  };
 
-  function updateField(category: keyof PassTemplate['structure'],
+  const updateField = (
+    category: keyof PassTemplate['structure'],
     index: number,
     field: string,
-    value: string) {
+    value: string
+  ) => {
     const updatedFields = [...template.structure[category]];
     updatedFields[index] = { ...updatedFields[index], [field]: value };
-
+    
     setTemplate({
       ...template,
       structure: {
@@ -189,125 +158,17 @@ export default function PassTemplateBuilder({
         [category]: updatedFields
       }
     });
-  }
+  };
 
   const removeField = (category: keyof PassTemplate['structure'], index: number) => {
     setTemplate({
       ...template,
       structure: {
         ...template.structure,
-        [category]: template.structure[category].filter((_, i) => i !== index)
+        [category]: template.structure[category].filter((field: any, i: number) => i !== index)
       }
     });
   };
-
-'use client';
-
-// ... existing imports ...
-import { useRouter } from 'next/navigation';
-
-export default function PassTemplateBuilder() {
-  const router = useRouter();
-  const [saving, setSaving] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'front' | 'back'>('front');
-  const [showPreview, setShowPreview] = useState(true);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const validationErrors = validatePassTemplate(template);
-      if (validationErrors.length > 0) {
-        setErrors(validationErrors);
-        setSaving(false);
-        return;
-      }
-
-      const response = await fetch('/api/templates', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(template),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to save template');
-      }
-
-      router.push('/dashboard/passes/templates');
-    } catch (error) {
-      console.error('Save error:', error);
-      setErrors(['Failed to save template']);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Add this to your return JSX, after the tabs content
-  return (
-    <div className="flex h-full">
-      {/* Left side - Form */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Your existing form content */}
-      </div>
-
-      {/* Right side - Preview */}
-      {showPreview && (
-        <div className="w-96 border-l bg-gray-50 p-6">
-          <div className="sticky top-0">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-medium text-gray-900">Preview</h2>
-              <button
-                onClick={() => setPreviewMode(previewMode === 'front' ? 'back' : 'front')}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Show {previewMode === 'front' ? 'Back' : 'Front'}
-              </button>
-            </div>
-            <div className="bg-white rounded-lg shadow-lg p-4">
-              <PassPreview
-                mode={previewMode}
-                data={template}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
-        <div className="flex justify-between items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <button
-            onClick={() => setShowPreview(!showPreview)}
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            {showPreview ? 'Hide Preview' : 'Show Preview'}
-          </button>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => router.push('/dashboard/passes/templates')}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
-                saving 
-                  ? 'bg-indigo-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700'
-              }`}
-            >
-              {saving ? 'Saving...' : 'Save Template'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
   const updateNFCSettings = (updates: Partial<NFCSettings>) => {
     setTemplate({
@@ -319,112 +180,110 @@ export default function PassTemplateBuilder() {
     });
   };
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8 px-6" aria-label="Tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                py-4 px-1 border-b-2 font-medium text-sm
-                ${activeTab === tab.id
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
-              `}
-            >
-              {tab.label}
-            </button>
-          ))}
+    <div className="flex h-full">
+      {/* Left Sidebar - Tabs */}
+      <div className="w-64 border-r bg-white">
+        <nav className="space-y-1 p-4">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                  activeTab === tab.id
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Icon className="h-5 w-5 mr-3" />
+                {tab.label}
+              </button>
+            );
+          })}
         </nav>
       </div>
-
-      <div className="flex-1 overflow-y-auto p-6">
-        {errors.length > 0 && (
-          <div className="mb-4 p-4 bg-red-50 rounded-md">
-            <div className="flex">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Please fix the following errors:
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <ul className="list-disc pl-5 space-y-1">
-                    {errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
+  
+      {/* Main Content - Form */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6 space-y-6">
+          {errors.length > 0 && (
+            <div className="bg-red-50 p-4 rounded-md">
+              <div className="flex">
+                <AlertCircle className="h-5 w-5 text-red-400" />
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Please fix the following errors:
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc pl-5 space-y-1">
+                      {errors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'basic' && (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Pass Type
-              </label>
-              <select
-                value={template.passTypeIdentifier.split('.').pop() || 'generic'}
-                onChange={(e) => {
-                  const type = e.target.value as PassType;
-                  setTemplate({
-                    ...template,
-                    passTypeIdentifier: `pass.com.yourcompany.${type}`
-                  });
-                }}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="generic">Generic</option>
-                <option value="eventTicket">Event Ticket</option>
-                <option value="boardingPass">Boarding Pass</option>
-                <option value="storeCard">Store Card</option>
-                <option value="coupon">Coupon</option>
-              </select>
+          )}
+  
+          {activeTab === 'basic' && (
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Template Name
+                </label>
+                <input
+                  type="text"
+                  value={template.name}
+                  onChange={(e) => setTemplate({...template, name: e.target.value})}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+  
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  value={template.description}
+                  onChange={(e) => setTemplate({...template, description: e.target.value})}
+                  rows={3}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+  
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Pass Type
+                </label>
+                <select
+                  value={template.passType}
+                  onChange={(e) => setTemplate({...template, passType: e.target.value})}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="generic">Generic</option>
+                  <option value="eventTicket">Event Ticket</option>
+                  <option value="boardingPass">Boarding Pass</option>
+                  <option value="storeCard">Store Card</option>
+                  <option value="coupon">Coupon</option>
+                </select>
+              </div>
+  
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Organization Name
+                </label>
+                <input
+                  type="text"
+                  value={template.organizationName}
+                  onChange={(e) => setTemplate({...template, organizationName: e.target.value})}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Organization Name
-              </label>
-              <input
-                type="text"
-                value={template.organizationName}
-                onChange={(e) => setTemplate({...template, organizationName: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <textarea
-                value={template.description}
-                onChange={(e) => setTemplate({...template, description: e.target.value})}
-                rows={3}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Team Identifier
-              </label>
-              <input
-                type="text"
-                value={template.teamIdentifier}
-                onChange={(e) => setTemplate({...template, teamIdentifier: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                placeholder="Your Apple Developer Team ID"
-              />
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'appearance' && (
+          )}
+          {activeTab === 'design' && (
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -432,7 +291,7 @@ export default function PassTemplateBuilder() {
               </label>
               <input
                 type="color"
-                value={template.backgroundColor?.replace('rgb(', '').replace(')', '').split(',').map(x => {
+                value={template.backgroundColor?.replace('rgb(', '').replace(')', '').split(',').map((x: string) => {
                   const hex = parseInt(x.trim()).toString(16);
                   return hex.length === 1 ? '0' + hex : hex;
                 }).join('')}
@@ -443,17 +302,17 @@ export default function PassTemplateBuilder() {
                   const b = parseInt(hex.slice(5, 7), 16);
                   setTemplate({...template, backgroundColor: `rgb(${r}, ${g}, ${b})`});
                 }}
-                className="mt-1 block w-full h-10"
+                className="mt-1 block w-full h-10 p-1 rounded-md border border-gray-300"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Foreground Color
+                Text Color
               </label>
               <input
                 type="color"
-                value={template.foregroundColor?.replace('rgb(', '').replace(')', '').split(',').map(x => {
+                value={template.foregroundColor?.replace('rgb(', '').replace(')', '').split(',').map((x: string) => {
                   const hex = parseInt(x.trim()).toString(16);
                   return hex.length === 1 ? '0' + hex : hex;
                 }).join('')}
@@ -464,34 +323,13 @@ export default function PassTemplateBuilder() {
                   const b = parseInt(hex.slice(5, 7), 16);
                   setTemplate({...template, foregroundColor: `rgb(${r}, ${g}, ${b})`});
                 }}
-                className="mt-1 block w-full h-10"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Label Color
-              </label>
-              <input
-                type="color"
-                value={template.labelColor?.replace('rgb(', '').replace(')', '').split(',').map(x => {
-                  const hex = parseInt(x.trim()).toString(16);
-                  return hex.length === 1 ? '0' + hex : hex;
-                }).join('')}
-                onChange={(e) => {
-                  const hex = e.target.value;
-                  const r = parseInt(hex.slice(1, 3), 16);
-                  const g = parseInt(hex.slice(3, 5), 16);
-                  const b = parseInt(hex.slice(5, 7), 16);
-                  setTemplate({...template, labelColor: `rgb(${r}, ${g}, ${b})`});
-                }}
-                className="mt-1 block w-full h-10"
+                className="mt-1 block w-full h-10 p-1 rounded-md border border-gray-300"
               />
             </div>
           </div>
         )}
 
-        {activeTab === 'structure' && (
+        {activeTab === 'fields' && (
           <div className="space-y-8">
             {/* Header Fields */}
             <div>
@@ -499,13 +337,14 @@ export default function PassTemplateBuilder() {
                 <h3 className="text-lg font-medium text-gray-900">Header Fields</h3>
                 <button
                   onClick={() => addField('headerFields')}
-                  className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+                  className="inline-flex items-center px-3 py-1 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
                 >
+                  <Plus className="h-4 w-4 mr-1" />
                   Add Field
                 </button>
               </div>
-              {template.structure.headerFields.map((field, index) => (
-                <div key={index} className="flex gap-4 mb-4">
+              {template.structure.headerFields.map((field: { label: string; value: string }, index: number) => (
+                <div key={index} className="flex items-center gap-4 mb-4">
                   <input
                     placeholder="Label"
                     value={field.label}
@@ -520,7 +359,7 @@ export default function PassTemplateBuilder() {
                   />
                   <button
                     onClick={() => removeField('headerFields', index)}
-                    className="px-2 py-1 text-red-600 hover:text-red-800"
+                    className="p-1 text-red-600 hover:text-red-800"
                   >
                     <Trash className="h-5 w-5" />
                   </button>
@@ -534,13 +373,14 @@ export default function PassTemplateBuilder() {
                 <h3 className="text-lg font-medium text-gray-900">Primary Fields</h3>
                 <button
                   onClick={() => addField('primaryFields')}
-                  className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+                  className="inline-flex items-center px-3 py-1 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
                 >
+                  <Plus className="h-4 w-4 mr-1" />
                   Add Field
                 </button>
               </div>
-              {template.structure.primaryFields.map((field, index) => (
-                <div key={index} className="flex gap-4 mb-4">
+              {template.structure.primaryFields.map((field: { label: string; value: string }, index: number) => (
+                <div key={index} className="flex items-center gap-4 mb-4">
                   <input
                     placeholder="Label"
                     value={field.label}
@@ -555,7 +395,7 @@ export default function PassTemplateBuilder() {
                   />
                   <button
                     onClick={() => removeField('primaryFields', index)}
-                    className="px-2 py-1 text-red-600 hover:text-red-800"
+                    className="p-1 text-red-600 hover:text-red-800"
                   >
                     <Trash className="h-5 w-5" />
                   </button>
@@ -578,7 +418,7 @@ export default function PassTemplateBuilder() {
                     onChange={(e) => updateNFCSettings({ enabled: e.target.checked })}
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="nfcEnabled" className="ml-2 block text-sm text-gray-900">
+                  <label htmlFor="nfcEnabled" className="ml-2 text-sm text-gray-900">
                     Enable NFC
                   </label>
                 </div>
@@ -599,62 +439,23 @@ export default function PassTemplateBuilder() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Access Control
-                    </label>
-                    <div className="mt-2 space-y-2">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="requiresAuthentication"
-                          checked={template.nfc?.accessControl.requiresAuthentication}
-                          onChange={(e) => updateNFCSettings({
-                            accessControl: {
-                              ...template.nfc!.accessControl,
-                              requiresAuthentication: e.target.checked
-                            }
-                          })}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor="requiresAuthentication" className="ml-2 block text-sm text-gray-900">
-                          Requires Authentication
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="requiresPresence"
-                          checked={template.nfc?.accessControl.requiresPresence}
-                          onChange={(e) => updateNFCSettings({
-                            accessControl: {
-                              ...template.nfc!.accessControl,
-                              requiresPresence: e.target.checked
-                            }
-                          })}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor="requiresPresence" className="ml-2 block text-sm text-gray-900">
-                          Requires Presence
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="unlockDevice"
-                          checked={template.nfc?.accessControl.unlockDevice}
-                          onChange={(e) => updateNFCSettings({
-                            accessControl: {
-                              ...template.nfc!.accessControl,
-                              unlockDevice: e.target.checked
-                            }
-                          })}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor="unlockDevice" className="ml-2 block text-sm text-gray-900">
-                          Unlock Device
-                        </label>
-                      </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="requiresAuthentication"
+                        checked={template.nfc?.accessControl.requiresAuthentication}
+                        onChange={(e) => updateNFCSettings({
+                          accessControl: {
+                            ...template.nfc!.accessControl,
+                            requiresAuthentication: e.target.checked
+                          }
+                        })}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor="requiresAuthentication" className="ml-2 text-sm text-gray-900">
+                        Requires Authentication
+                      </label>
                     </div>
                   </div>
 
@@ -669,19 +470,6 @@ export default function PassTemplateBuilder() {
                       className="mt-1 block w-full rounded-md border-gray-300"
                       placeholder="Optional: Public key for NFC encryption"
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Custom NFC Payload
-                    </label>
-                    <textarea
-                      value={template.nfc?.payload}
-                      onChange={(e) => updateNFCSettings({ payload: e.target.value })}
-                      rows={4}
-                      className="mt-1 block w-full rounded-md border-gray-300"
-                      placeholder="Optional: Custom NFC payload data"
-                      />
                   </div>
                 </>
               )}
@@ -732,50 +520,61 @@ export default function PassTemplateBuilder() {
             </div>
           </div>
         )}
-
-        {activeTab === 'advanced' && (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Web Service URL
-              </label>
-              <input
-                type="url"
-                value={template.webServiceURL}
-                onChange={(e) => setTemplate({...template, webServiceURL: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300"
-                placeholder="https://your-api.com/passes"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Authentication Token
-              </label>
-              <input
-                type="text"
-                value={template.authenticationToken}
-                onChange={(e) => setTemplate({...template, authenticationToken: e.target.value})}
-                className="mt-1 block w-full rounded-md border-gray-300"
-              />
-            </div>
-          </div>
-        )}
       </div>
+    </div>
 
-      <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200">
-        <div className="flex justify-end space-x-3">
+    {/* Right Preview Panel */}
+    {showPreview && (
+      <div className="w-96 border-l bg-gray-50">
+        <div className="p-4 sticky top-0">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-medium text-gray-900">Preview</h2>
+            <button
+              onClick={() => setPreviewMode(previewMode === 'front' ? 'back' : 'front')}
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Show {previewMode === 'front' ? 'Back' : 'Front'}
+            </button>
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            {/* Pass Preview Component would go here */}
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Footer Actions */}
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+      <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
+        <button
+          onClick={() => setShowPreview(!showPreview)}
+          className="text-sm text-gray-600 hover:text-gray-900"
+        >
+          {showPreview ? 'Hide Preview' : 'Show Preview'}
+        </button>
+        <div className="flex space-x-4">
+          <button
+            onClick={handleCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Cancel
+          </button>
           <button
             onClick={handleSave}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            disabled={saving}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+              saving 
+                ? 'bg-indigo-400 cursor-not-allowed'
+                : 'bg-indigo-600 hover:bg-indigo-700'
+            }`}
           >
-            <Save className="h-4 w-4 mr-2" />
-            Save Template
+            {saving ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Create Template'}
           </button>
         </div>
       </div>
     </div>
-  );
-}
+  </div>
+);
+};
 
-
+export default PassTemplateBuilder;

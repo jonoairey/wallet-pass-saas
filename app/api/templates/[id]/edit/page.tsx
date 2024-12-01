@@ -4,9 +4,22 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PassTemplateBuilder from '@/components/dashboard/PassTemplateBuilder';
 
+// Define the template interface
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  status: string;
+  configuration: any; // You can make this more specific based on your needs
+  organizationId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function EditTemplatePage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const [template, setTemplate] = useState(null);
+  const [template, setTemplate] = useState<Template | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,7 +74,7 @@ export default function EditTemplatePage({ params }: { params: { id: string } })
       </div>
       {template && (
         <PassTemplateBuilder 
-          initialTemplate={template.configuration}
+          initialTemplate={template.configuration as any}
           mode="edit"
           templateId={params.id}
         />

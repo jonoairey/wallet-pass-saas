@@ -1,11 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import DashboardOverview from '@/components/dashboard/DashboardOverview';
 
-// Add type for template
 interface Template {
   id: string;
   name: string;
@@ -15,12 +12,10 @@ interface Template {
   configuration: any;
 }
 
-export default function TemplatesPage() {
-  const router = useRouter();
+export default function DashboardPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null); // Change error type
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTemplates();
@@ -33,10 +28,27 @@ export default function TemplatesPage() {
       const data = await response.json();
       setTemplates(data);
     } catch (err) {
-      setError('Failed to load templates'); // Now this will work
+      setError('Failed to load templates');
     } finally {
       setLoading(false);
     }
   };
 
-  // Rest of your component code...
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
+
+  return <DashboardOverview templates={templates} />;
+}

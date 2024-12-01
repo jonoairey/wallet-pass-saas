@@ -21,8 +21,8 @@ import {
 } from 'lucide-react';
 
 interface PassTemplateBuilderProps {
-  initialTemplate?: any;
-  mode?: 'create' | 'edit';
+  initialTemplate: any; // You can make this more specific based on your needs
+  mode: 'create' | 'edit';
   templateId?: string;
 }
 

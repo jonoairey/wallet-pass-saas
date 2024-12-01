@@ -79,15 +79,109 @@ export default function PassTemplateBuilder() {
     });
   };
 
-  const updateField = (
-    category: keyof PassTemplate['structure'],
+// Add these props to your component
+interface PassTemplateBuilderProps {
+  initialTemplate?: any;
+  mode?: 'create' | 'edit';
+  templateId?: string;
+}
+
+export default function PassTemplateBuilder({
+  initialTemplate,
+  mode = 'create',
+  templateId
+}: PassTemplateBuilderProps) {
+  const [template, setTemplate] = useState(initialTemplate || defaultTemplate);
+  
+  // Update the handleSave function
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const validationErrors = validatePassTemplate(template);
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        setSaving(false);
+        return;
+      }
+
+      const url = mode === 'edit' 
+        ? `/api/templates/${templateId}`
+        : '/api/templates';
+        
+      const response = await fetch(url, {
+        method: mode === 'edit' ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(template),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to save template');
+      }
+
+      router.push('/dashboard/passes/templates');
+    } catch (error) {
+      console.error('Save error:', error);
+      setErrors(['Failed to save template']);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Add a discard changes confirmation
+  const handleCancel = () => {
+    if (mode === 'edit' && !confirm('Discard changes?')) {
+      return;
+    }
+    router.push('/dashboard/passes/templates');
+  };
+
+  // Update the JSX to show edit mode
+  return (
+    <div className="flex h-full">
+      {/* ... existing JSX ... */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+        <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </button>
+          <div className="flex space-x-4">
+            <button
+              onClick={handleCancel}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                saving 
+                  ? 'bg-indigo-400 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700'
+              }`}
+            >
+              {saving ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Create Template'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+  function updateField(category: keyof PassTemplate['structure'],
     index: number,
     field: string,
-    value: string
-  ) => {
+    value: string) {
     const updatedFields = [...template.structure[category]];
     updatedFields[index] = { ...updatedFields[index], [field]: value };
-    
+
     setTemplate({
       ...template,
       structure: {
@@ -95,7 +189,7 @@ export default function PassTemplateBuilder() {
         [category]: updatedFields
       }
     });
-  };
+  }
 
   const removeField = (category: keyof PassTemplate['structure'], index: number) => {
     setTemplate({
@@ -106,6 +200,114 @@ export default function PassTemplateBuilder() {
       }
     });
   };
+
+'use client';
+
+// ... existing imports ...
+import { useRouter } from 'next/navigation';
+
+export default function PassTemplateBuilder() {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'front' | 'back'>('front');
+  const [showPreview, setShowPreview] = useState(true);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const validationErrors = validatePassTemplate(template);
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        setSaving(false);
+        return;
+      }
+
+      const response = await fetch('/api/templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(template),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to save template');
+      }
+
+      router.push('/dashboard/passes/templates');
+    } catch (error) {
+      console.error('Save error:', error);
+      setErrors(['Failed to save template']);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Add this to your return JSX, after the tabs content
+  return (
+    <div className="flex h-full">
+      {/* Left side - Form */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Your existing form content */}
+      </div>
+
+      {/* Right side - Preview */}
+      {showPreview && (
+        <div className="w-96 border-l bg-gray-50 p-6">
+          <div className="sticky top-0">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-medium text-gray-900">Preview</h2>
+              <button
+                onClick={() => setPreviewMode(previewMode === 'front' ? 'back' : 'front')}
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Show {previewMode === 'front' ? 'Back' : 'Front'}
+              </button>
+            </div>
+            <div className="bg-white rounded-lg shadow-lg p-4">
+              <PassPreview
+                mode={previewMode}
+                data={template}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+        <div className="flex justify-between items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </button>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => router.push('/dashboard/passes/templates')}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-md ${
+                saving 
+                  ? 'bg-indigo-400 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700'
+              }`}
+            >
+              {saving ? 'Saving...' : 'Save Template'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   const updateNFCSettings = (updates: Partial<NFCSettings>) => {
     setTemplate({

@@ -1,50 +1,62 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-
-// Temporary sample data - will be replaced with database data
-const templates = [
-  {
-    id: '1',
-    name: 'Corporate Access Card',
-    type: 'CORPORATE_ACCESS',
-    createdAt: '2024-01-15',
-    status: 'active',
-    totalPasses: 145,
-    description: 'Employee access card with NFC capabilities',
-  },
-  {
-    id: '2',
-    name: 'VIP Event Pass',
-    type: 'EVENT',
-    createdAt: '2024-01-20',
-    status: 'active',
-    totalPasses: 89,
-    description: 'NFC-enabled event access pass',
-  },
-  {
-    id: '3',
-    name: 'Smart Loyalty Card',
-    type: 'LOYALTY',
-    createdAt: '2024-01-25',
-    status: 'draft',
-    totalPasses: 0,
-    description: 'Digital loyalty card with NFC rewards',
-  },
-];
+import { useRouter } from 'next/navigation';
 
 export default function TemplatesPage() {
+  const router = useRouter();
+  const [templates, setTemplates] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || template.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await fetch('/api/templates');
+      if (!response.ok) throw new Error('Failed to fetch templates');
+      const data = await response.json();
+      setTemplates(data);
+    } catch (err) {
+      setError('Failed to load templates');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    if (!confirm('Are you sure you want to delete this template?')) return;
+
+    try {
+      const response = await fetch(`/api/templates/${templateId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete template');
+      
+      // Refresh templates list
+      fetchTemplates();
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
+  };
+
+  const filteredTemplates = templates.filter(template => 
+    template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    template.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-8">
@@ -63,7 +75,7 @@ export default function TemplatesPage() {
         </Link>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <div className="flex gap-4">
         <div className="flex-1 relative">
           <input
@@ -73,19 +85,8 @@ export default function TemplatesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
           />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
+          <Search className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
         </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="block w-40 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-        >
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-        </select>
       </div>
 
       {/* Templates Grid */}
@@ -99,39 +100,32 @@ export default function TemplatesPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">
-                    <Link href={`/dashboard/passes/templates/${template.id}`} className="hover:text-indigo-600">
-                      {template.name}
-                    </Link>
+                    {template.name}
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">{template.description}</p>
                 </div>
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  template.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                  template.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {template.status}
+                  {template.status.toLowerCase()}
                 </span>
               </div>
               <div className="mt-4 flex justify-between items-center">
                 <div className="flex space-x-2 text-sm text-gray-500">
                   <span>{template.type}</span>
-                  <span>•</span>
-                  <span>{template.totalPasses} passes</span>
                 </div>
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => window.location.href = `/dashboard/passes/templates/${template.id}/edit`}
-                    className="p-1 text-gray-400 hover:text-indigo-600"
+                    onClick={() => router.push(`/dashboard/passes/templates/${template.id}/edit`)}
+                    className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                    title="Edit template"
                   >
                     <Edit className="h-5 w-5" />
                   </button>
                   <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this template?')) {
-                        // Add delete logic here
-                        console.log('Deleting template:', template.id);
-                      }
-                    }}
-                    className="p-1 text-gray-400 hover:text-red-600"
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                    title="Delete template"
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>
@@ -149,6 +143,17 @@ export default function TemplatesPage() {
           <p className="mt-1 text-sm text-gray-500">
             {searchQuery ? 'Try adjusting your search terms.' : 'Get started by creating a new template.'}
           </p>
+          {!searchQuery && (
+            <div className="mt-6">
+              <Link
+                href="/dashboard/passes/templates/new"
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Template
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </div>

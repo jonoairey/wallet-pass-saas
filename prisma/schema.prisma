@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = env("postgres://neondb_owner:Tl6VSow2QtGy@ep-lively-dust-a7rwomxz-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require")
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -15,7 +15,6 @@ model User {
   role          Role        @default(USER)
   organization  Organization? @relation(fields: [orgId], references: [id])
   orgId         String?
-  passes        Pass[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -24,39 +23,22 @@ model Organization {
   id            String    @id @default(cuid())
   name          String
   users         User[]
-  passes        Pass[]
-  passTemplates PassTemplate[]
+  templates     Template[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
 
-model Pass {
-  id            String    @id @default(cuid())
-  type          PassType
-  status        PassStatus @default(ACTIVE)
-  template      PassTemplate @relation(fields: [templateId], references: [id])
-  templateId    String
-  user          User      @relation(fields: [userId], references: [id])
-  userId        String
-  organization  Organization @relation(fields: [orgId], references: [id])
-  orgId         String
-  data          Json
-  validFrom     DateTime
-  validUntil    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-}
-
-model PassTemplate {
+model Template {
   id            String    @id @default(cuid())
   name          String
-  type          PassType
-  design        Json
-  organization  Organization @relation(fields: [orgId], references: [id])
-  orgId         String
-  passes        Pass[]
+  description   String
+  type          String    // Pass type stored as string
+  status        TemplateStatus @default(DRAFT)
+  configuration Json      // Store complete pass configuration
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
 }
 
 enum Role {
@@ -65,14 +47,8 @@ enum Role {
   SUPER_ADMIN
 }
 
-enum PassType {
-  CORPORATE_ACCESS
-  EVENT
-  LOYALTY
-}
-
-enum PassStatus {
+enum TemplateStatus {
+  DRAFT
   ACTIVE
-  SUSPENDED
-  EXPIRED
+  ARCHIVED
 }

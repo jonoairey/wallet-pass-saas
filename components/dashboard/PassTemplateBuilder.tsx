@@ -62,6 +62,19 @@ interface PassTemplate {
   platformSettings: PlatformSettings;
 }
 
+interface PassTemplateBuilderProps {
+  mode?: 'create' | 'edit';
+  templateId?: string;
+}
+
+interface FieldSectionProps {
+  section: keyof PassTemplate['fields'];
+  fields: PassField[];
+  onUpdate: (index: number, key: 'label' | 'value', value: string) => void;
+  onAdd: () => void;
+  onRemove: (index: number) => void;
+}
+
 const defaultTemplate: PassTemplate = {
   name: '',
   description: '',
@@ -101,56 +114,46 @@ const tabs = [
   { id: 'platforms', label: 'Platform Settings', icon: Settings }
 ] as const;
 
-interface PassTemplateBuilderProps {
-  mode?: 'create' | 'edit';
-  templateId?: string;
-}
-
-// Component for rendering field sections
-const FieldSection = ({ 
+const FieldSection: React.FC<FieldSectionProps> = ({ 
   section, 
   fields, 
   onUpdate, 
   onAdd, 
   onRemove 
-}: { 
-  section: keyof PassTemplate['fields'];
-  fields: PassField[];
-  onUpdate: (index: number, key: 'label' | 'value', value: string) => void;
-  onAdd: () => void;
-  onRemove: (index: number) => void;
-}) => (
-  <div className="space-y-4">
-    <div className="flex justify-between items-center">
-      <h3 className="text-lg font-medium text-gray-900 capitalize">{section} Fields</h3>
-      <Button variant="outline" size="sm" onClick={onAdd}>Add Field</Button>
-    </div>
-    {fields.map((field, index) => (
-      <div key={index} className="flex gap-4 items-start">
-        <Input
-          placeholder="Label"
-          value={field.label}
-          onChange={(e) => onUpdate(index, 'label', e.target.value)}
-        />
-        <Input
-          placeholder="Value"
-          value={field.value}
-          onChange={(e) => onUpdate(index, 'value', e.target.value)}
-        />
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => onRemove(index)}
-          className="text-red-600 hover:text-red-800"
-        >
-          <Trash className="h-4 w-4" />
-        </Button>
+}) => {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium text-gray-900 capitalize">{section} Fields</h3>
+        <Button variant="outline" size="sm" onClick={onAdd}>Add Field</Button>
       </div>
-    ))}
-  </div>
-);
+      {fields.map((field, index) => (
+        <div key={index} className="flex gap-4 items-start">
+          <Input
+            placeholder="Label"
+            value={field.label}
+            onChange={(e) => onUpdate(index, 'label', e.target.value)}
+          />
+          <Input
+            placeholder="Value"
+            value={field.value}
+            onChange={(e) => onUpdate(index, 'value', e.target.value)}
+          />
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => onRemove(index)}
+            className="text-red-600 hover:text-red-800"
+          >
+            <Trash className="h-4 w-4" />
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+};
 
-export default function PassTemplateBuilder({ mode = 'create', templateId }: PassTemplateBuilderProps) {
+const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({ mode = 'create', templateId }) => {
   const router = useRouter();
   const [template, setTemplate] = useState<PassTemplate>(defaultTemplate);
   const [activeTab, setActiveTab] = useState<typeof tabs[number]['id']>('basic');

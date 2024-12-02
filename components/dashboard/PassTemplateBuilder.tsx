@@ -17,14 +17,36 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 
+type PassType = 'generic' | 'eventTicket' | 'boardingPass' | 'storeCard';
+
 interface PassField {
   label: string;
   value: string;
+}
+
+interface PlatformSettings {
+  apple: {
+    passTypeIdentifier: string;
+    teamIdentifier: string;
+  };
+  google: {
+    issuerId: string;
+    classId: string;
+  };
+}
+
+interface NFCSettings {
+  enabled: boolean;
+  message: string;
+  requiresAuthentication: boolean;
+  requirePresence?: boolean;
+  allowLocked?: boolean;
+}
 
 interface PassTemplate {
   name: string;
   description: string;
-  type: 'generic' | 'eventTicket' | 'boardingPass' | 'storeCard';
+  type: PassType;
   organizationName: string;
   colors: {
     background: string;
@@ -36,23 +58,8 @@ interface PassTemplate {
     primary: PassField[];
     secondary: PassField[];
   };
-  nfc: {
-    enabled: boolean;
-    message: string;
-    requiresAuthentication: boolean;
-    requirePresence?: boolean;
-    allowLocked?: boolean;
-  };
-  platformSettings: {
-    apple: {
-      passTypeIdentifier: string;
-      teamIdentifier: string;
-    };
-    google: {
-      issuerId: string;
-      classId: string;
-    };
-  };
+  nfc: NFCSettings;
+  platformSettings: PlatformSettings;
 }
 
 const defaultTemplate: PassTemplate = {
@@ -98,6 +105,8 @@ interface PassTemplateBuilderProps {
   mode?: 'create' | 'edit';
   templateId?: string;
 }
+
+// Rest of your component code remains the same...
 
 // Component for rendering field sections
 const FieldSection = ({ 

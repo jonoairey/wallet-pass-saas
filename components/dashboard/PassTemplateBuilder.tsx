@@ -169,7 +169,7 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
   const updateField = (
     category: keyof PassTemplate['structure'],
     index: number,
-    field: string,
+    field: keyof (PassTemplate['structure'][keyof PassTemplate['structure']][number]),
     value: string
   ) => {
     setTemplate(prev => {
@@ -234,6 +234,7 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
           })}
         </nav>
       </div>
+      </div>
   
       {/* Main Content Area */}
       <div className="flex-1 flex">
@@ -241,7 +242,7 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
             {/* Error Messages */}
-            {errors.length > 0 && (
+            {errors.length !== 0 && (
               <div className="bg-red-50 p-4 rounded-md">
                 <div className="flex">
                   <AlertCircle className="h-5 w-5 text-red-400" />
@@ -254,6 +255,7 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
                         {errors.map((error, index) => (
                           <li key={index}>{error}</li>
                         ))}
+                        </div>
                       </ul>
                     </div>
                   </div>
@@ -290,7 +292,7 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
       </div>
   
       {/* Footer Actions */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4"></div>
         <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
           <button
             onClick={() => setShowPreview(!showPreview)}
@@ -728,7 +730,7 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
   </div>
   {template.structure.headerFields.map((field, index) => (
     <FieldInput
-      key={index}
+      key={index.toString()}
       field={field}
       index={index}
       category="headerFields"
@@ -781,6 +783,7 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
     </div>
 
     {/* Primary Fields */}
+    </div>
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium text-gray-900">Primary Fields</h3>
@@ -912,62 +915,52 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
       {/* Background Image (for Google Wallet) - Similar structure */}
     </div>
   </div>
-</>
+</div> {/* <-- Ensure this closing tag matches the opening tag */}
 {/* Secondary Fields */}
 <div className="flex justify-between items-center mb-4">
     <h3 className="text-lg font-medium text-gray-900">Secondary Fields</h3>
-  </div>
-</>
+</div>
+{template?.structure?.secondaryFields?.map((field, index) => (
+  <div key={index} className="flex gap-4 mb-4 items-start">
+    <div className="flex-1">
+      <label className="block text-sm font-medium text-gray-700">Key</label>
+      <input
+        type="text"
+        value={field.key}
+        onChange={(e) => updateField('secondaryFields', index, 'key', e.target.value)}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        placeholder="unique_identifier"
+      />
+    </div>
+    <div className="flex-1">
+      <label className="block text-sm font-medium text-gray-700">Label</label>
+      <input
+        type="text"
+        value={field.label}
+        onChange={(e) => updateField('secondaryFields', index, 'label', e.target.value)}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        placeholder="Display Label"
+      />
+    </div>
+    <div className="flex-1">
+      <label className="block text-sm font-medium text-gray-700">Value</label>
+      <input
+        type="text"
+        value={field.value}
+        onChange={(e) => updateField('secondaryFields', index, 'value', e.target.value)}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        placeholder="Field Value"
+      />
+    </div>
     <button
-      onClick={() => addField('secondaryFields')}
-      className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+      onClick={() => removeField('secondaryFields', index)}
+      className="mt-6 p-2 text-red-600 hover:text-red-800"
+      title="Remove field"
     >
-      <Plus className="h-4 w-4 mr-1" />
-      Add Field
+      <Trash className="h-5 w-5" />
     </button>
   </div>
-  {template.structure.secondaryFields.map((field, index) => (
-    <div key={index} className="flex gap-4 mb-4 items-start">
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700">Key</label>
-        <input
-          type="text"
-          value={field.key}
-          onChange={(e) => updateField('secondaryFields', index, 'key', e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          placeholder="unique_identifier"
-        />
-      </div>
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700">Label</label>
-        <input
-          type="text"
-          value={field.label}
-          onChange={(e) => updateField('secondaryFields', index, 'label', e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          placeholder="Display Label"
-        />
-      </div>
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700">Value</label>
-        <input
-          type="text"
-          value={field.value}
-          onChange={(e) => updateField('secondaryFields', index, 'value', e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          placeholder="Field Value"
-        />
-      </div>
-      <button
-        onClick={() => removeField('secondaryFields', index)}
-        className="mt-6 p-2 text-red-600 hover:text-red-800"
-        title="Remove field"
-      >
-        <Trash className="h-5 w-5" />
-      </button>
-    </div>
-  ))}
-</div>
+))}
 
 {/* Auxiliary Fields */}
 <div>
@@ -1042,7 +1035,7 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
       Add Field
     </button>
   </div>
-  {template.structure.backFields.map((field, index) => (
+  {template?.structure?.backFields?.map((field, index) => (
     <div key={index} className="flex gap-4 mb-4 items-start">
       <div className="flex-1">
         <label className="block text-sm font-medium text-gray-700">Key</label>
@@ -1096,8 +1089,8 @@ const FieldInput = ({
 }: {
   field: any;
   index: number;
-  category: keyof typeof template.structure;
-  onUpdate: (category: string, index: number, key: string, value: string) => void;
+  category: keyof PassTemplate['structure'];
+  onUpdate: (category: keyof PassTemplate['structure'], index: number, key: string, value: string) => void;
   onRemove: (index: number) => void;
 }) => {
   return (
@@ -1184,7 +1177,7 @@ const FieldInput = ({
           <input
             type="text"
             value={field.value.toString()}
-            onChange={(e) => onUpdate(category, index, 'value', e.target.value.toString())}
+            onChange={(e) => onUpdate(category, index, 'value', e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             placeholder="Field Value"
           />

@@ -109,6 +109,28 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
     { id: 'advanced', label: 'Advanced', icon: Settings }
   ];
 
+  const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({ 
+    initialTemplate, 
+    mode = 'create', 
+    templateId 
+  }) => {
+    const router = useRouter();
+    const [template, setTemplate] = useState(initialTemplate || defaultTemplate);
+    const [activeTab, setActiveTab] = useState('basic');
+    const [saving, setSaving] = useState(false);
+    const [errors, setErrors] = useState<string[]>([]);
+    const [fieldErrors, setFieldErrors] = useState<{
+      headerFields: FieldError[];
+      primaryFields: FieldError[];
+      secondaryFields: FieldError[];
+      auxiliaryFields: FieldError[];
+    }>({
+      headerFields: [],
+      primaryFields: [],
+      secondaryFields: [],
+      auxiliaryFields: [],
+    });
+
   const handleTemplateSave = async () => {
     setSaving(true);
     try {
@@ -1008,10 +1030,11 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
   </div>
   // Add this function to validate fields before saving
   const validateAllFields = (): boolean => {
-    const headerErrors = validateFields(template.structure.headerFields, 'header');
-    const primaryErrors = validateFields(template.structure.primaryFields, 'primary');
-    const secondaryErrors = validateFields(template.structure.secondaryFields, 'secondary');
-    const auxiliaryErrors = validateFields(template.structure.auxiliaryFields, 'auxiliary');
+    const validateAllFields = (): boolean => {
+      const headerErrors = validateFieldSet(template.structure.headerFields, 'header');
+      const primaryErrors = validateFieldSet(template.structure.primaryFields, 'primary');
+      const secondaryErrors = validateFieldSet(template.structure.secondaryFields, 'secondary');
+      const auxiliaryErrors = validateFieldSet(template.structure.auxiliaryFields, 'auxiliary');
     setFieldErrors({
       headerFields: headerErrors,
       primaryFields: primaryErrors,
@@ -1027,11 +1050,9 @@ const PassTemplateBuilder: React.FC<PassTemplateBuilderProps> = ({
     );
   };
   
-  // Update the save handler
   const handleSave = async () => {
     if (!validateAllFields()) {
-      // Show error message
-      console.error('Please fix field validation errors before saving');
+      setErrors(['Please fix field validation errors before saving']);
       return;
     }
     // ... rest of your save logic

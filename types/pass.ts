@@ -89,7 +89,7 @@ export interface ApplePassTemplate {
 }
 
 // New Universal Template that generates both formats
-export interface UniversalPassTemplate {
+export interface PassTemplate {
   id?: string;
   name: string;
   description: string;
@@ -153,7 +153,7 @@ export interface UniversalPassTemplate {
 }
 
 // Helper function to convert Universal template to Apple format
-export function convertToApplePass(universal: UniversalPassTemplate): ApplePassTemplate {
+export function convertToApplePass(universal: PassTemplate): ApplePassTemplate {
   return {
     passTypeIdentifier: universal.platformSpecific.apple.passTypeIdentifier,
     teamIdentifier: universal.platformSpecific.apple.teamIdentifier,

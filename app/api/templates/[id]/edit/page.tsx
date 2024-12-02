@@ -1,12 +1,17 @@
 'use client';
 
+type InitialTemplateType = typeof initialTemplate;
+type PassTemplateType = PassTemplate;
+console.log('InitialTemplateType:', InitialTemplateType);
+console.log('PassTemplateType:', PassTemplateType);
+
 import { useState } from 'react';
 import PassTemplateBuilder, { PassTemplate } from '@/components/dashboard/PassTemplateBuilder';
 
-const defaultTemplate: PassTemplate = {
+const defaultTemplate = {
   name: '',
   description: '',
-  type: 'generic',
+  type: 'generic' as const,
   organizationName: '',
   colors: {
     background: '#FFFFFF',
@@ -33,10 +38,10 @@ const defaultTemplate: PassTemplate = {
       classId: ''
     }
   }
-};
+} as const;
 
 export default function NewTemplatePage() {
-  const [initialTemplate] = useState<PassTemplate>(defaultTemplate);
+  const [initialTemplate] = useState<PassTemplate>({...defaultTemplate});
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

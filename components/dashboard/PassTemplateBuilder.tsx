@@ -106,8 +106,6 @@ interface PassTemplateBuilderProps {
   templateId?: string;
 }
 
-// Rest of your component code remains the same...
-
 // Component for rendering field sections
 const FieldSection = ({ 
   section, 
@@ -132,12 +130,12 @@ const FieldSection = ({
         <Input
           placeholder="Label"
           value={field.label}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdate(index, 'label', e.target.value)}
+          onChange={(e) => onUpdate(index, 'label', e.target.value)}
         />
         <Input
           placeholder="Value"
           value={field.value}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdate(index, 'value', e.target.value)}
+          onChange={(e) => onUpdate(index, 'value', e.target.value)}
         />
         <Button 
           variant="ghost" 
@@ -158,7 +156,6 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
   const [activeTab, setActiveTab] = useState<typeof tabs[number]['id']>('basic');
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-  
 
   const updateTemplate = <K extends keyof PassTemplate>(
     key: K,
@@ -255,20 +252,18 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                 {activeTab === 'basic' && (
                   <div className="space-y-6">
                     <Input
-                      label="Template Name"
+                      placeholder="Template Name"
                       value={template.name}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTemplate('name', e.target.value)}
-                      placeholder="Corporate Access Pass"
+                      onChange={(e) => updateTemplate('name', e.target.value)}
                     />
                     <Textarea
-                      label="Description"
+                      placeholder="Description"
                       value={template.description}
                       onChange={(e) => updateTemplate('description', e.target.value)}
-                      placeholder="NFC-enabled pass for corporate access"
                     />
                     <Select
                       value={template.type}
-                      onValueChange={(value: string) => updateTemplate('type', value as PassTemplate['type'])}
+                      onValueChange={(value: PassType) => updateTemplate('type', value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select pass type" />
@@ -281,10 +276,9 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                       </SelectContent>
                     </Select>
                     <Input
-                      label="Organization Name"
+                      placeholder="Organization Name"
                       value={template.organizationName}
                       onChange={(e) => updateTemplate('organizationName', e.target.value)}
-                      placeholder="Your Company Name"
                     />
                   </div>
                 )}
@@ -304,7 +298,7 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                               <input
                                 type="color"
                                 value={value}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTemplate('colors', {
+                                onChange={(e) => updateTemplate('colors', {
                                   ...template.colors,
                                   [key]: e.target.value
                                 })}
@@ -346,7 +340,7 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                       </div>
                       <Switch
                         checked={template.nfc.enabled}
-                        onCheckedChange={(checked: boolean) => updateTemplate('nfc', {
+                        onCheckedChange={(checked) => updateTemplate('nfc', {
                           ...template.nfc,
                           enabled: checked
                         })}
@@ -356,13 +350,12 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                     {template.nfc.enabled && (
                       <div className="space-y-6">
                         <Input
-                          label="NFC Message"
+                          placeholder="NFC Message"
                           value={template.nfc.message}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTemplate('nfc', {
+                          onChange={(e) => updateTemplate('nfc', {
                             ...template.nfc,
                             message: e.target.value
                           })}
-                          placeholder="Message displayed during NFC interaction"
                         />
                         
                         <div className="flex items-center justify-between">
@@ -374,7 +367,7 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                           </div>
                           <Switch
                             checked={template.nfc.requiresAuthentication}
-                            onCheckedChange={(checked: boolean) => updateTemplate('nfc', {
+                            onCheckedChange={(checked) => updateTemplate('nfc', {
                               ...template.nfc,
                               requiresAuthentication: checked
                             })}
@@ -390,9 +383,9 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                     <div className="space-y-4">
                       <h3 className="text-lg font-medium">Apple Wallet Settings</h3>
                       <Input
-                        label="Pass Type Identifier"
+                        placeholder="Pass Type Identifier"
                         value={template.platformSettings.apple.passTypeIdentifier}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTemplate('platformSettings', {
+                        onChange={(e) => updateTemplate('platformSettings', {
                           ...template.platformSettings,
                           apple: {
                             ...template.platformSettings.apple,
@@ -401,9 +394,9 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                         })}
                       />
                       <Input
-                        label="Team Identifier"
+                        placeholder="Team Identifier"
                         value={template.platformSettings.apple.teamIdentifier}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTemplate('platformSettings', {
+                        onChange={(e) => updateTemplate('platformSettings', {
                           ...template.platformSettings,
                           apple: {
                             ...template.platformSettings.apple,
@@ -416,9 +409,9 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                     <div className="space-y-4">
                       <h3 className="text-lg font-medium">Google Wallet Settings</h3>
                       <Input
-                        label="Issuer ID"
+                        placeholder="Issuer ID"
                         value={template.platformSettings.google.issuerId}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTemplate('platformSettings', {
+                        onChange={(e) => updateTemplate('platformSettings', {
                           ...template.platformSettings,
                           google: {
                             ...template.platformSettings.google,
@@ -427,9 +420,9 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
                         })}
                       />
                       <Input
-                        label="Class ID"
+                        placeholder="Class ID"
                         value={template.platformSettings.google.classId}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTemplate('platformSettings', {
+                        onChange={(e) => updateTemplate('platformSettings', {
                           ...template.platformSettings,
                           google: {
                             ...template.platformSettings.google,
@@ -445,125 +438,137 @@ export default function PassTemplateBuilder({ mode = 'create', templateId }: Pas
           </div>
         </div>
 
-        {/* Preview Content */}
-              <div>
-                <Card className="overflow-hidden">
-                  <CardContent className="p-4">
-                    {/* Pass Preview */}
+        {/* Preview Panel */}
+        {showPreview && (
+          <div className="w-96 border-l bg-gray-50">
+            <div className="p-4">
+              <h2 className="text-lg font-medium mb-4">Preview</h2>
+              <Card className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div 
+                    className="rounded-lg shadow p-4"
+                    style={{ backgroundColor: template.colors.background }}
+                  >
                     <div 
-                      className="rounded-lg shadow p-4"
-                      style={{ backgroundColor: template.colors.background }}
+                      className="text-sm font-medium mb-4"
+                      style={{ color: template.colors.label }}
                     >
-                      {/* Organization Name */}
-                      <div 
-                        className="text-sm font-medium mb-4"
-                        style={{ color: template.colors.label }}
-                      >
-                        {template.organizationName || 'Organization Name'}
-                      </div>
-              
-                      {/* Header Fields */}
-                      {template.fields.header.map((field, index) => (
-                        <div key={index} className="mb-4">
-                          <div 
-                            className="text-xs"
-                            style={{ color: template.colors.label }}
-                          >
-                            {field.label || 'Header Label'}
-                          </div>
-                          <div 
-                            className="text-base font-medium"
-                            style={{ color: template.colors.foreground }}
-                          >
-                            {field.value || 'Header Value'}
-                          </div>
-                        </div>
-                      ))}
-              
-                      {/* Primary Fields */}
-                      {template.fields.primary.map((field, index) => (
-                        <div key={index} className="mb-3">
-                          <div 
-                            className="text-xs"
-                            style={{ color: template.colors.label }}
-                          >
-                            {field.label || 'Primary Label'}
-                          </div>
-                          <div 
-                            className="text-lg font-bold"
-                            style={{ color: template.colors.foreground }}
-                          >
-                            {field.value || 'Primary Value'}
-                          </div>
-                        </div>
-                      ))}
-              
-                      {/* Secondary Fields */}
-                      <div className="grid grid-cols-2 gap-4">
-                        {template.fields.secondary.map((field, index) => (
-                          <div key={index}>
-                            <div 
-                              className="text-xs"
-                              style={{ color: template.colors.label }}
-                            >
-                              {field.label || 'Secondary Label'}
-                            </div>
-                            <div 
-                              className="text-sm"
-                              style={{ color: template.colors.foreground }}
-                            >
-                              {field.value || 'Secondary Value'}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-              
-                      {/* NFC Indicator */}
-                      {template.nfc.enabled && (
-                        <div className="mt-4 flex items-center gap-2">
-                          <Smartphone className="h-4 w-4" style={{ color: template.colors.label }} />
-                          <span className="text-xs" style={{ color: template.colors.label }}>
-                            NFC Enabled
-                          </span>
-                        </div>
-                      )}
+                      {template.organizationName
+                      {/* Preview Panel */}
+        {showPreview && (
+          <div className="w-96 border-l bg-gray-50">
+            <div className="p-4">
+              <h2 className="text-lg font-medium mb-4">Preview</h2>
+              <Card className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div 
+                    className="rounded-lg shadow p-4"
+                    style={{ backgroundColor: template.colors.background }}
+                  >
+                    <div 
+                      className="text-sm font-medium mb-4"
+                      style={{ color: template.colors.label }}
+                    >
+                      {template.organizationName || 'Organization Name'}
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+
+                    {/* Header Fields */}
+                    {template.fields.header.map((field, index) => (
+                      <div key={index} className="mb-4">
+                        <div 
+                          className="text-xs"
+                          style={{ color: template.colors.label }}
+                        >
+                          {field.label || 'Header Label'}
+                        </div>
+                        <div 
+                          className="text-base font-medium"
+                          style={{ color: template.colors.foreground }}
+                        >
+                          {field.value || 'Header Value'}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Primary Fields */}
+                    {template.fields.primary.map((field, index) => (
+                      <div key={index} className="mb-3">
+                        <div 
+                          className="text-xs"
+                          style={{ color: template.colors.label }}
+                        >
+                          {field.label || 'Primary Label'}
+                        </div>
+                        <div 
+                          className="text-lg font-bold"
+                          style={{ color: template.colors.foreground }}
+                        >
+                          {field.value || 'Primary Value'}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Secondary Fields */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {template.fields.secondary.map((field, index) => (
+                        <div key={index}>
+                          <div 
+                            className="text-xs"
+                            style={{ color: template.colors.label }}
+                          >
+                            {field.label || 'Secondary Label'}
+                          </div>
+                          <div 
+                            className="text-sm"
+                            style={{ color: template.colors.foreground }}
+                          >
+                            {field.value || 'Secondary Value'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* NFC Indicator */}
+                    {template.nfc.enabled && (
+                      <div className="mt-4 flex items-center gap-2">
+                        <Smartphone className="h-4 w-4" style={{ color: template.colors.label }} />
+                        <span className="text-xs" style={{ color: template.colors.label }}>
+                          NFC Enabled
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
-        );
-      }
+        )}
+      </div>
 
-        {/* Footer */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
-          <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
+      {/* Footer */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+        <div className="flex justify-between items-center max-w-7xl mx-auto px-4">
+          <Button
+            variant="ghost"
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </Button>
+
+          <div className="flex gap-4">
             <Button
-              variant="ghost"
-              onClick={() => setShowPreview(!showPreview)}
+              variant="outline"
+              onClick={() => router.push('/dashboard/passes/templates')}
             >
-              {showPreview ? 'Hide Preview' : 'Show Preview'}
+              Cancel
             </Button>
-
-            <div className="flex gap-4">
-              <Button
-                variant="outline"
-                onClick={() => router.push('/dashboard/passes/templates')}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Create Template'}
-              </Button>
-            </div>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : mode === 'edit' ? 'Save Changes' : 'Create Template'}
+            </Button>
           </div>
         </div>
       </div>
